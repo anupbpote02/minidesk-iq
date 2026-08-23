@@ -167,24 +167,24 @@ row1_col1, row1_col2 = st.columns(2)
 with row1_col1:
     st.markdown("#### Queries Over Time")
     if not qdf.empty:
-        daily = qdf.set_index("timestamp").resample("D").size().reset_index(name="count")
+        by_minute = qdf.set_index("timestamp").resample("1min").size().reset_index(name="count")
         fig = go.Figure()
         fig.add_trace(
             go.Scatter(
-                x=daily["timestamp"],
-                y=daily["count"],
+                x=by_minute["timestamp"],
+                y=by_minute["count"],
                 mode="lines",
                 line=dict(color=SERIES["blue"], width=2, shape="spline"),
                 fill="tozeroy",
                 fillcolor="rgba(42,120,214,0.12)",
-                hovertemplate="%{x|%b %d, %Y}: %{y} queries<extra></extra>",
+                hovertemplate="%{x|%H:%M}: %{y} queries<extra></extra>",
             )
         )
         fig.update_layout(
             **chart_layout(
                 height=300,
                 showlegend=False,
-                xaxis=dict(type="date", tickformat="%b %d", hoverformat="%b %d, %Y"),
+                xaxis=dict(type="date", tickformat="%H:%M", hoverformat="%H:%M"),
                 yaxis=dict(rangemode="tozero"),
             )
         )
