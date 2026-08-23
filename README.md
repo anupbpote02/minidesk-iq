@@ -136,3 +136,5 @@ minidesk-iq/
 - If retrieval similarity falls below `RETRIEVAL_SIMILARITY_THRESHOLD` (default
   0.35 in `.env`), the agent responds honestly that it doesn't know instead of
   guessing, and flags the query as a knowledge gap for the admin dashboard.
+
+Pipeline test: test 1

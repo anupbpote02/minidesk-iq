@@ -1,0 +1,65 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [main]
+
+env:
+  EC2_USER: ubuntu
+  # Path to the repo clone on the EC2 instance. Adjust if your deploy path differs.
+  EC2_DEPLOY_PATH: /home/ubuntu/minidesk-iq
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Python syntax check
+        run: |
+          find . -type f -name "*.py" -not -path "./.git/*" -print0 \
+            | xargs -0 -n1 python -m py_compile
+
+      - name: Deploy to EC2 (git pull, rebuild containers, health check)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ env.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            cd ${{ env.EC2_DEPLOY_PATH }}
+
+            echo "== git pull =="
+            git pull origin main
+
+            echo "== docker compose up -d --build =="
+            docker compose up -d --build
+
+            echo "== health check =="
+            for i in $(seq 1 10); do
+              status=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/health || echo "000")
+              if [ "$status" = "200" ]; then
+                echo "Backend healthy (HTTP 200)"
+                exit 0
+              fi
+              echo "Attempt $i/10: backend returned $status, retrying in 5s..."
+              sleep 5
+            done
+            echo "Backend did not become healthy after restart"
+            exit 1
+
+      - name: Report deployment result
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "### :white_check_mark: Deploy succeeded" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### :x: Deploy failed" >> "$GITHUB_STEP_SUMMARY"
+          fi
