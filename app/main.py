@@ -16,6 +16,7 @@ from app.rag.ingest import (
     ingest_policies,
     save_policy_document,
 )
+from app.tools.resolve_ticket import resolve_ticket
 
 ALLOWED_UPLOAD_EXTENSIONS = {".md", ".txt", ".pdf"}
 
@@ -52,6 +53,10 @@ class CreateTicketRequest(BaseModel):
 
 class ApproveRequest(BaseModel):
     approver: str
+
+
+class ResolveRequest(BaseModel):
+    resolver: str = "admin"
 
 
 @app.get("/health")
@@ -97,11 +102,11 @@ def api_approve_ticket(ticket_id: int, request: ApproveRequest):
 
 
 @app.post("/tickets/{ticket_id}/resolve")
-def api_resolve_ticket(ticket_id: int):
-    ticket = crud.get_ticket(ticket_id)
-    if not ticket:
-        raise HTTPException(status_code=404, detail="Ticket not found")
-    return crud.update_ticket_status(ticket_id, status="resolved")
+def api_resolve_ticket(ticket_id: int, request: ResolveRequest):
+    result = resolve_ticket(ticket_id=ticket_id, resolver=request.resolver)
+    if result.get("status") == "error":
+        raise HTTPException(status_code=404, detail=result["message"])
+    return result
 
 
 @app.get("/logs/queries")

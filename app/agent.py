@@ -6,12 +6,13 @@ from typing import Any, Optional
 
 from openai import OpenAI
 
-from app.config import CHAT_MODEL, OPENAI_API_KEY, RETRIEVAL_SIMILARITY_THRESHOLD
+from app.config import ADMIN_EMAIL, CHAT_MODEL, OPENAI_API_KEY, RETRIEVAL_SIMILARITY_THRESHOLD
 from app.db import crud
 from app.rag.retrieve import best_match_above_threshold, format_context, retrieve
 from app.tools.approve_request import approve_request
 from app.tools.check_ticket_status import check_ticket_status
 from app.tools.create_ticket import create_ticket
+from app.tools.resolve_ticket import resolve_ticket
 from app.tools.schemas import TOOL_SCHEMAS
 
 _client = OpenAI(api_key=OPENAI_API_KEY)
@@ -20,6 +21,7 @@ TOOL_IMPLEMENTATIONS = {
     "create_ticket": create_ticket,
     "check_ticket_status": check_ticket_status,
     "approve_request": approve_request,
+    "resolve_ticket": resolve_ticket,
 }
 
 SYSTEM_PROMPT = """You are MiniDesk IQ, an agentic IT service desk copilot for employees.
@@ -27,7 +29,8 @@ SYSTEM_PROMPT = """You are MiniDesk IQ, an agentic IT service desk copilot for e
 You have two ways to help:
 1. Answer using the IT/HR policy knowledge base context provided to you (VPN access,
    password reset, hardware requests, remote work, expense reimbursement).
-2. Call a tool to create a ticket, check a ticket's status, or approve a request.
+2. Call a tool to create a ticket, check a ticket's status, approve a request, or
+   resolve/close a ticket.
 
 Rules:
 - If the provided knowledge base context answers the question, answer clearly and
@@ -39,18 +42,33 @@ Rules:
   answers IT/HR policy questions and handles service desk requests.
 - If the employee is asking to file a request, report an issue, check on an existing
   ticket, or approve something, use the appropriate tool.
+- If someone asks to resolve or close a ticket, use the resolve_ticket tool.
+  Closing tickets is restricted to the admin account. If the tool result says the
+  requester doesn't have permission, tell the employee plainly that only an admin
+  can close tickets and that they should contact an admin — do not attempt the
+  action again or work around it.
 - You may both answer from context AND call a tool in the same turn if the request
   calls for it (e.g., explaining the VPN policy and also filing a VPN access ticket).
 - Keep responses concise and professional, like a helpful IT colleague.
 """
 
 
-def _run_tool_call(tool_call) -> dict[str, Any]:
+def _run_tool_call(tool_call, requester: str) -> dict[str, Any]:
     name = tool_call.function.name
     try:
         args = json.loads(tool_call.function.arguments or "{}")
     except json.JSONDecodeError:
         args = {}
+
+    if name == "resolve_ticket":
+        if requester != ADMIN_EMAIL:
+            return {
+                "status": "error",
+                "message": "Only an admin can close tickets. Please contact an admin for help.",
+            }
+        # The resolver identity must come from the authenticated session, not the
+        # model's tool-call arguments, so the audit trail can't be spoofed.
+        args["resolver"] = "admin"
 
     fn = TOOL_IMPLEMENTATIONS.get(name)
     if fn is None:
@@ -102,7 +120,7 @@ def handle_message(user_message: str, requester: str = "employee") -> dict[str, 
         messages.append(choice.message)
 
         for tool_call in tool_calls:
-            result = _run_tool_call(tool_call)
+            result = _run_tool_call(tool_call, requester)
             tool_names.append(tool_call.function.name)
             tool_results.append(result)
             messages.append(

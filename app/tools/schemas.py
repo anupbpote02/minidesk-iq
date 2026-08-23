@@ -75,4 +75,31 @@ TOOL_SCHEMAS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "resolve_ticket",
+            "description": (
+                "Resolve/close an existing ticket, setting its status to 'resolved'. "
+                "This is restricted to the admin account — only call this when the "
+                "person making the request is the logged-in admin. If a non-admin "
+                "employee asks to close or resolve a ticket, do not call this tool; "
+                "politely explain that only an admin can close tickets."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "ticket_id": {
+                        "type": "integer",
+                        "description": "The numeric ID of the ticket to resolve.",
+                    },
+                    "resolver": {
+                        "type": "string",
+                        "description": "Name or email of the person resolving the ticket.",
+                    },
+                },
+                "required": ["ticket_id", "resolver"],
+            },
+        },
+    },
 ]

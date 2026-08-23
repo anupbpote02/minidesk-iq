@@ -266,6 +266,22 @@ with row2_col2:
 st.markdown("---")
 
 # ---------------------------------------------------------------------------
+# Tickets table
+# ---------------------------------------------------------------------------
+st.markdown("#### Tickets")
+if not tdf.empty:
+    ticket_cols = ["id", "description", "category", "status", "requester", "approver", "created_at", "resolved_at"]
+    st.dataframe(
+        tdf[ticket_cols].sort_values("created_at", ascending=False),
+        use_container_width=True,
+        hide_index=True,
+    )
+else:
+    st.info("No tickets yet.")
+
+st.markdown("---")
+
+# ---------------------------------------------------------------------------
 # Knowledge gaps table
 # ---------------------------------------------------------------------------
 st.markdown("#### ⚠️ Knowledge Gaps (Unanswered Questions)")

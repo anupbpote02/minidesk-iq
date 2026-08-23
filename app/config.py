@@ -22,6 +22,7 @@ RETRIEVAL_TOP_K = int(os.getenv("RETRIEVAL_TOP_K", "4"))
 RETRIEVAL_SIMILARITY_THRESHOLD = float(os.getenv("RETRIEVAL_SIMILARITY_THRESHOLD", "0.35"))
 
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "changeme")
+ADMIN_EMAIL = "admin@admin.com"
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
 CHUNK_SIZE = 800
