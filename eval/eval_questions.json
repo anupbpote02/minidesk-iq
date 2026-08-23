@@ -1,0 +1,86 @@
+[
+  {
+    "question": "How do I request VPN access?",
+    "expected_source": "vpn_policy.md"
+  },
+  {
+    "question": "What VPN client does the company use?",
+    "expected_source": "vpn_policy.md"
+  },
+  {
+    "question": "Does VPN require multi-factor authentication?",
+    "expected_source": "vpn_policy.md"
+  },
+  {
+    "question": "How long can a VPN session stay connected before it times out?",
+    "expected_source": "vpn_policy.md"
+  },
+  {
+    "question": "I forgot my password, how can I reset it myself?",
+    "expected_source": "password_reset.md"
+  },
+  {
+    "question": "What are the password complexity requirements?",
+    "expected_source": "password_reset.md"
+  },
+  {
+    "question": "How often do privileged admin account passwords expire?",
+    "expected_source": "password_reset.md"
+  },
+  {
+    "question": "What happens after 5 failed login attempts?",
+    "expected_source": "password_reset.md"
+  },
+  {
+    "question": "My laptop is broken, how do I get a replacement?",
+    "expected_source": "hardware_request.md"
+  },
+  {
+    "question": "What should I do if my laptop is stolen?",
+    "expected_source": "hardware_request.md"
+  },
+  {
+    "question": "What hardware approval is needed for a $1500 monitor?",
+    "expected_source": "hardware_request.md"
+  },
+  {
+    "question": "Can I get a loaner laptop while waiting for a replacement?",
+    "expected_source": "hardware_request.md"
+  },
+  {
+    "question": "Am I eligible to work fully remote?",
+    "expected_source": "remote_work.md"
+  },
+  {
+    "question": "What internet speed do I need to work from home?",
+    "expected_source": "remote_work.md"
+  },
+  {
+    "question": "Is there a stipend for setting up a home office?",
+    "expected_source": "remote_work.md"
+  },
+  {
+    "question": "Do I need approval to work from another country for a month?",
+    "expected_source": "remote_work.md"
+  },
+  {
+    "question": "How much can I expense for client meals per day?",
+    "expected_source": "expense_policy.md"
+  },
+  {
+    "question": "How long do I have to submit an expense report after a purchase?",
+    "expected_source": "expense_policy.md"
+  },
+  {
+    "question": "What is the mileage reimbursement rate for using my personal car?",
+    "expected_source": "expense_policy.md"
+  },
+  {
+    "question": "Are business class flights reimbursable?",
+    "expected_source": "expense_policy.md"
+  },
+  {
+    "question": "What is the meaning of life?",
+    "expected_source": null
+  }
+]

@@ -1,0 +1,59 @@
+services:
+  backend:
+    build: .
+    container_name: minidesk-iq-backend
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../.env
+    environment:
+      - CHROMA_PERSIST_DIR=/app/chroma_db
+      - SQLITE_DB_PATH=/app/data/minidesk.db
+      - POLICIES_DIR=/app/data/policies
+    volumes:
+      - ./data:/app/data
+      - chroma_data:/app/chroma_db
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  chat-app:
+    build: .
+    container_name: minidesk-iq-chat-app
+    command: streamlit run frontend/chat_app.py --server.port 8501 --server.address 0.0.0.0
+    ports:
+      - "8501:8501"
+    env_file:
+      - ../.env
+    environment:
+      - API_BASE_URL=http://backend:8000
+      - POLICIES_DIR=/app/data/policies
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  admin-dashboard:
+    build: .
+    container_name: minidesk-iq-admin-dashboard
+    command: streamlit run frontend/admin_dashboard.py --server.port 8502 --server.address 0.0.0.0
+    ports:
+      - "8502:8502"
+    env_file:
+      - ../.env
+    environment:
+      - API_BASE_URL=http://backend:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  chroma_data:
