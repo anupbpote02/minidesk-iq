@@ -6,7 +6,7 @@ def resolve_ticket(ticket_id: int, resolver: str) -> dict:
     if not ticket:
         return {"status": "error", "message": f"No ticket found with ID {ticket_id}."}
 
-    updated = crud.update_ticket_status(ticket_id, status="resolved")
+    updated = crud.update_ticket_status(ticket_id, status="resolved", approver=resolver)
     crud.log_audit(
         actor=resolver,
         event_type="ticket_closed",

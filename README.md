@@ -138,3 +138,4 @@ minidesk-iq/
   guessing, and flags the query as a knowledge gap for the admin dashboard.
 
 Pipeline test: test 1
+Pipeline test: test 2
