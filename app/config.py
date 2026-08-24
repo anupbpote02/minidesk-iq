@@ -34,6 +34,7 @@ TICKET_CATEGORIES = [
     "Hardware Request",
     "Remote Work",
     "Expense Reimbursement",
+    "Software License",
     "Other",
 ]
 
