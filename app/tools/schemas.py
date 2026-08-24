@@ -38,16 +38,24 @@ TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "check_ticket_status",
-            "description": "Look up the current status of an existing ticket by its ticket ID.",
+            "description": (
+                "Look up the current status of an existing ticket by its ticket ID. "
+                "Omit ticket_id if the employee refers to 'that ticket', 'it', or 'this "
+                "ticket' without giving a number — it will resolve to the most recently "
+                "created or referenced ticket in this conversation."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {
                     "ticket_id": {
                         "type": "integer",
-                        "description": "The numeric ID of the ticket to look up.",
+                        "description": (
+                            "The numeric ID of the ticket to look up. Optional — omit it "
+                            "to refer to the most recently created/referenced ticket."
+                        ),
                     },
                 },
-                "required": ["ticket_id"],
+                "required": [],
             },
         },
     },
@@ -57,21 +65,27 @@ TOOL_SCHEMAS = [
             "name": "approve_request",
             "description": (
                 "Approve a pending ticket/request (e.g., a manager or admin approving "
-                "a VPN access or hardware request). Moves the ticket to in_progress."
+                "a VPN access or hardware request). Moves the ticket to in_progress. "
+                "Omit ticket_id if the employee refers to 'that ticket', 'it', or 'this "
+                "ticket' without giving a number — it will resolve to the most recently "
+                "created or referenced ticket in this conversation."
             ),
             "parameters": {
                 "type": "object",
                 "properties": {
                     "ticket_id": {
                         "type": "integer",
-                        "description": "The numeric ID of the ticket to approve.",
+                        "description": (
+                            "The numeric ID of the ticket to approve. Optional — omit it "
+                            "to refer to the most recently created/referenced ticket."
+                        ),
                     },
                     "approver": {
                         "type": "string",
                         "description": "Name or email of the person approving the request.",
                     },
                 },
-                "required": ["ticket_id", "approver"],
+                "required": ["approver"],
             },
         },
     },
@@ -84,21 +98,27 @@ TOOL_SCHEMAS = [
                 "This is restricted to the admin account — only call this when the "
                 "person making the request is the logged-in admin. If a non-admin "
                 "employee asks to close or resolve a ticket, do not call this tool; "
-                "politely explain that only an admin can close tickets."
+                "politely explain that only an admin can close tickets. "
+                "Omit ticket_id if the employee refers to 'that ticket', 'it', or 'this "
+                "ticket' without giving a number — it will resolve to the most recently "
+                "created or referenced ticket in this conversation."
             ),
             "parameters": {
                 "type": "object",
                 "properties": {
                     "ticket_id": {
                         "type": "integer",
-                        "description": "The numeric ID of the ticket to resolve.",
+                        "description": (
+                            "The numeric ID of the ticket to resolve. Optional — omit it "
+                            "to refer to the most recently created/referenced ticket."
+                        ),
                     },
                     "resolver": {
                         "type": "string",
                         "description": "Name or email of the person resolving the ticket.",
                     },
                 },
-                "required": ["ticket_id", "resolver"],
+                "required": ["resolver"],
             },
         },
     },

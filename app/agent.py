@@ -24,6 +24,17 @@ TOOL_IMPLEMENTATIONS = {
     "resolve_ticket": resolve_ticket,
 }
 
+# Tools that operate on an existing ticket. If the model omits ticket_id (because the
+# employee said "that ticket" / "it" instead of a number), we fall back to the last
+# ticket created or referenced by this requester.
+_TICKET_ID_TOOLS = {"check_ticket_status", "approve_request", "resolve_ticket"}
+
+# There's no chat session concept in this API (each /chat call is stateless and the
+# frontend doesn't send history) — requester is the closest thing to a session identity,
+# since each logged-in user always sends the same email. Per-process, in-memory state is
+# fine here: it's conversational short-term memory, not data that needs to survive restarts.
+_last_ticket_by_requester: dict[str, int] = {}
+
 SYSTEM_PROMPT = """You are MiniDesk IQ, an agentic IT service desk copilot for employees.
 
 You have two ways to help:
@@ -42,6 +53,9 @@ Rules:
   answers IT/HR policy questions and handles service desk requests.
 - If the employee is asking to file a request, report an issue, check on an existing
   ticket, or approve something, use the appropriate tool.
+- If the employee refers to "that ticket", "it", or "this ticket" instead of a number,
+  do not ask them to repeat the ID — call the tool without a ticket_id and it will
+  resolve to the most recently created or referenced ticket in this conversation.
 - If someone asks to resolve or close a ticket, use the resolve_ticket tool.
   Closing tickets is restricted to the admin account. If the tool result says the
   requester doesn't have permission, tell the employee plainly that only an admin
@@ -60,6 +74,15 @@ def _run_tool_call(tool_call, requester: str) -> dict[str, Any]:
     except json.JSONDecodeError:
         args = {}
 
+    if name in _TICKET_ID_TOOLS and not args.get("ticket_id"):
+        last_ticket_id = _last_ticket_by_requester.get(requester)
+        if last_ticket_id is None:
+            return {
+                "status": "error",
+                "message": "I don't have a ticket number to go on — could you share the ticket ID?",
+            }
+        args["ticket_id"] = last_ticket_id
+
     if name == "resolve_ticket":
         if requester != ADMIN_EMAIL:
             return {
@@ -73,7 +96,14 @@ def _run_tool_call(tool_call, requester: str) -> dict[str, Any]:
     fn = TOOL_IMPLEMENTATIONS.get(name)
     if fn is None:
         return {"status": "error", "message": f"Unknown tool: {name}"}
-    return fn(**args)
+
+    result = fn(**args)
+
+    ticket_id = result.get("ticket_id")
+    if ticket_id is not None:
+        _last_ticket_by_requester[requester] = ticket_id
+
+    return result
 
 
 def handle_message(user_message: str, requester: str = "employee") -> dict[str, Any]:
